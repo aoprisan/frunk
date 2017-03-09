@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Generic` trait in crate `frunk_core`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Generic">
+
+    <title>frunk_core::generic::Generic - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>frunk_core</a>::<wbr><a href='index.html'>generic</a></p><script>window.sidebarCurrent = {name: 'Generic', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='../index.html'>frunk_core</a>::<wbr><a href='index.html'>generic</a>::<wbr><a class="trait" href=''>Generic</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/frunk_core/generic.rs.html#38-56' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Generic {
+    type <a href='#associatedtype.Repr' class="type">Repr</a>;
+    fn <a href='#tymethod.into' class='fnname'>into</a>(self) -&gt; Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a>;
+    fn <a href='#tymethod.from' class='fnname'>from</a>(r: Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a>) -&gt; Self;
+
+    fn <a href='#method.convert_from' class='fnname'>convert_from</a>&lt;A&gt;(a: A) -&gt; Self <span class="where fmt-newline">where A: <a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Generic</a>&lt;Repr=Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a>&gt;, Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a></span> { ... }
+}</pre><div class='docblock'><p>A trait that converts from a type to a generic representation</p>
+
+<p>For the most part, you should be using the derivation that is available through
+frunk_derive to generate instances of this typeclass for your types.</p>
+
+<p>I would highly recommend you check out <code>derivation_tests.rs</code> to see how to actually use
+this trait in real life. Since frunk_derive depends on this trait, I can&#39;t actually
+pull it in as a dependency here (otherwise the dependency would be circular) and show
+how to use it in a proper doc test.</p>
+
+<pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Generic</span>)]</span>
+<span class="kw">struct</span> <span class="ident">ApiPerson</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="ident">FirstName</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
+    <span class="ident">LastName</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
+    <span class="ident">Age</span>: <span class="ident">usize</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Generic</span>)]</span>
+<span class="kw">struct</span> <span class="ident">DomainPerson</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="ident">first_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
+    <span class="ident">last_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
+    <span class="ident">age</span>: <span class="ident">usize</span>,
+}
+
+<span class="kw">let</span> <span class="ident">a_person</span> <span class="op">=</span> <span class="ident">ApiPerson</span> {
+    <span class="ident">first_name</span>: <span class="string">&quot;Joe&quot;</span>,
+    <span class="ident">last_name</span>: <span class="string">&quot;Blow&quot;</span>,
+    <span class="ident">age</span>: <span class="number">30</span>,
+};
+<span class="kw">let</span> <span class="ident">d_person</span>: <span class="ident">DomainPerson</span> <span class="op">=</span> <span class="ident">convert_from</span>(<span class="ident">a_person</span>); <span class="comment">// done</span><a class="test-arrow" target="_blank" href="https://play.rust-lang.org/?code=fn%20main()%20%7B%0A%23%5Bderive(Generic)%5D%0Astruct%20ApiPerson%3C'a%3E%20%7B%0A%20%20%20%20FirstName%3A%20%26'a%20str%2C%0A%20%20%20%20LastName%3A%20%26'a%20str%2C%0A%20%20%20%20Age%3A%20usize%2C%0A%7D%0A%0A%23%5Bderive(Generic)%5D%0Astruct%20DomainPerson%3C'a%3E%20%7B%0A%20%20%20%20first_name%3A%20%26'a%20str%2C%0A%20%20%20%20last_name%3A%20%26'a%20str%2C%0A%20%20%20%20age%3A%20usize%2C%0A%7D%0A%0Alet%20a_person%20%3D%20ApiPerson%20%7B%0A%20%20%20%20first_name%3A%20%22Joe%22%2C%0A%20%20%20%20last_name%3A%20%22Blow%22%2C%0A%20%20%20%20age%3A%2030%2C%0A%7D%3B%0Alet%20d_person%3A%20DomainPerson%20%3D%20convert_from(a_person)%3B%20%2F%2F%20done%0A%7D">Run</a></pre>
+</div>
+            <h2 id='associated-types'>Associated Types</h2>
+            <div class='methods'>
+        <h3 id='associatedtype.Repr' class='method'><span id='Repr.t' class='invisible'><code>type <a href='#associatedtype.Repr' class="type">Repr</a></code></span></h3><div class='docblock'><p>The generic representation type</p>
+</div></div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.into' class='method'><span id='into.v' class='invisible'><code>fn <a href='#tymethod.into' class='fnname'>into</a>(self) -&gt; Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a></code></span></h3><div class='docblock'><p>Go from something to Repr</p>
+</div><h3 id='tymethod.from' class='method'><span id='from.v' class='invisible'><code>fn <a href='#tymethod.from' class='fnname'>from</a>(r: Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a>) -&gt; Self</code></span></h3><div class='docblock'><p>Go from Repr to something</p>
+</div></div>
+            <h2 id='provided-methods'>Provided Methods</h2>
+            <div class='methods'>
+        <h3 id='method.convert_from' class='method'><span id='convert_from.v' class='invisible'><code>fn <a href='#method.convert_from' class='fnname'>convert_from</a>&lt;A&gt;(a: A) -&gt; Self <span class="where fmt-newline">where A: <a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Generic</a>&lt;Repr=Self::<a class="trait" href="../../frunk_core/generic/trait.Generic.html" title="trait frunk_core::generic::Generic">Repr</a>&gt;, Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a></span></code></span></h3><div class='docblock'><p>From one type to another using a type with a compatible generic representation</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    </ul><script type="text/javascript" async
+                         src="../../implementors/frunk_core/generic/trait.Generic.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "frunk_core";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

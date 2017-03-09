@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["monoid","Module for holding Monoid typeclass definitions and default implementations"],["semigroup","Module for holding the Semigroup typeclass definition and typeclass instances"],["validated","Module for holding Validated logic"]]});
