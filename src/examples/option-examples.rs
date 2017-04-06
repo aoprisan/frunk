@@ -1,5 +1,5 @@
-extern crate kinder;
-use kinder::lift::Monad;
+extern crate frunk;
+use frunk::kinder::lift::Monad;
 
 fn add_option(x: &Option<i32>, y: i32) -> Option<i32> {
     x.bind(|elem| Some(elem+y))

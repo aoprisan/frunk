@@ -1,4 +1,4 @@
-use lift::{Higher, Functor};
+use kinder::lift::{Higher, Functor};
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;

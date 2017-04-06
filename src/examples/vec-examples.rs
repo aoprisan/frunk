@@ -1,5 +1,5 @@
-extern crate kinder;
-use kinder::lift::{SemiGroup, Functor};
+extern crate frunk;
+use frunk::kinder::lift::{SemiGroup, Functor};
 
 fn fmap_vec(vec: &Vec<i32>) -> Vec<i32> {
     vec.fmap(|x| x*x) //square all elements in a vec<i32>

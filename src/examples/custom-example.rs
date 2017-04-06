@@ -1,8 +1,8 @@
 #![allow(dead_code, unused)]
 
 #[macro_use]
-extern crate kinder;
-use kinder::lift::*;
+extern crate frunk;
+use frunk::kinder::lift::*;
 
 //We'll define a very simply custom struct and then implement HOT's for it
 #[derive(Debug)] //for printing nicely

@@ -1,4 +1,4 @@
-use lift::{Higher, Monad};
+use kinder::lift::{Higher, Monad};
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;

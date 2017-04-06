@@ -1,4 +1,4 @@
-use lift::SemiGroup;
+use kinder::lift::SemiGroup;
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;

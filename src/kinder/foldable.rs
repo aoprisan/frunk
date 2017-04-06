@@ -1,4 +1,4 @@
-use lift::Foldable;
+use kinder::lift::Foldable;
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;

@@ -1,6 +1,6 @@
-extern crate kinder;
+extern crate frunk;
 
-use kinder::lift::{Foldable, Monoid};
+use frunk::kinder::lift::{Foldable, Monoid};
 
 fn sum_foldable<B : Monoid<A=B>, T: Foldable<A=B>>(xs: &T) -> B 
 {
