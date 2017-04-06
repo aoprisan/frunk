@@ -107,10 +107,14 @@ extern crate frunk_core;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate frunk_derives;
+#[allow(unused_imports)]
+#[macro_use]
+extern crate kinder;
 
 pub mod semigroup;
 pub mod monoid;
 pub mod validated;
+
 
 pub use frunk_core::hlist::*;
 pub use frunk_core::labelled::*;

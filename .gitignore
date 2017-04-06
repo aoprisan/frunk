@@ -5,3 +5,4 @@ Cargo.lock
 *.iml
 benches-control
 benches-variable
+.idea
