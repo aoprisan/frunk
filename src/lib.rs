@@ -5,9 +5,11 @@
 //! in effective, useful, and idiomatic ways. Examples of things that are included in rust are:
 //!
 //!   1. HLists (heterogeneously-typed lists)
-//!   2. Validated (accumulator for Result)
-//!   3. Semigroup
-//!   4. Monoid
+//!   2. LabelledGeneric, and Generic
+//!   3. Coproduct
+//!   4. Validated (accumulator for Result)
+//!   5. Semigroup
+//!   6. Monoid
 //!
 //! Here is a small taste of what Frunk has to offer:
 //!
@@ -15,9 +17,9 @@
 //! # #[macro_use] extern crate frunk;
 //! # #[macro_use] extern crate frunk_core;
 //! # use frunk_core::hlist::*; fn main() {
-//! use frunk_core::hlist::*;
-//! use frunk_core::generic::*;
-//! use frunk_core::labelled::*;
+//! use frunk::hlist::*;
+//! use frunk::generic::*;
+//! use frunk::labelled::*;
 //! use frunk::monoid::*;
 //! use frunk::semigroup::*;
 //! use frunk::validated::*;
@@ -113,10 +115,7 @@ pub mod semigroup;
 pub mod monoid;
 pub mod validated;
 pub mod kinder;
+pub mod coproduct;
 
-pub use frunk_core::hlist::*;
-pub use frunk_core::labelled::*;
-// this needs to be globally imported in order for custom derives to work w/o fuss
-pub use frunk_core::generic::*;
-
+pub use frunk_core::*;
 pub use frunk_derives::*;
