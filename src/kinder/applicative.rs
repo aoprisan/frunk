@@ -5,12 +5,12 @@ use std::collections::vec_deque::VecDeque;
 
 //Implementation of Applicative for Option
 impl<A,B> Applicative<A> for Option<B> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         Some(x)
     }
 
-    fn apply<F>(&self, f: <Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, f: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         match *self {
             Some(ref v) => match f {
@@ -24,12 +24,12 @@ impl<A,B> Applicative<A> for Option<B> {
 
 //Implementation of Applicative for Result
 impl<A,T,E : Clone> Applicative<A> for Result<T, E> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         Ok(x)
     }
 
-    fn apply<F>(&self, f: <Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, f: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         match *self {
             Ok(ref v) => match f {
@@ -43,12 +43,12 @@ impl<A,T,E : Clone> Applicative<A> for Result<T, E> {
 
 //Implementation of Applicative for Vec
 impl<A,B> Applicative<A> for Vec<B> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         vec!(x)
     }
 
-    fn apply<F>(&self, fs: <Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, fs: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         let zipped = self.iter().zip(fs.iter()); //vec!(1,2,3).iter().zip(vec!(f1,f2,f3)) => zip((1,f1), (2,f2), (3,f3))
         zipped.map(|(x,f)| f(x)).collect::<Vec<A>>()
@@ -57,14 +57,14 @@ impl<A,B> Applicative<A> for Vec<B> {
 
 //Implementation of Applicative for LinkedList
 impl<A,B> Applicative<A> for LinkedList<B> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         let mut ret = LinkedList::new();
         ret.push_back(x);
         ret
     }
 
-    fn apply<F>(&self, fs:<Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, fs:<Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         let zipped = self.iter().zip(fs.iter());
         zipped.map(|(x,f)| f(x)).collect::<LinkedList<A>>()
@@ -73,12 +73,12 @@ impl<A,B> Applicative<A> for LinkedList<B> {
 
 //Implemenation of Applicative for Box
 impl<A,B> Applicative<A> for Box<B> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         Box::new(x)
     }
 
-    fn apply<F>(&self, fs: <Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, fs: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         Box::new(fs(self))
     }
@@ -86,14 +86,14 @@ impl<A,B> Applicative<A> for Box<B> {
 
 //Implementation of Applicative for VecDeque
 impl<A,B> Applicative<A> for VecDeque<B> {
-    fn raise(x:A) -> <Self as Higher<A>>::C {
+    fn raise(x:A) -> <Self as Higher<A>>::FOutput {
         let mut ret = VecDeque::new();
         ret.push_back(x);
         ret
     }
 
-    fn apply<F>(&self, fs: <Self as Higher<F>>::C) -> <Self as Higher<A>>::C
-        where F: Fn(&<Self as Higher<A>>::B) -> A
+    fn apply<F>(&self, fs: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput
+        where F: Fn(&<Self as Higher<A>>::Current) -> A
     {
         let zipped = self.iter().zip(fs.iter());
         zipped.map(|(x,f)| f(x)).collect::<VecDeque<A>>()

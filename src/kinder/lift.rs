@@ -4,18 +4,18 @@ use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;
 use std::collections::{BinaryHeap, BTreeSet, HashSet};
 
-pub trait Higher<A> {
-    type B; //current type inside higher type, i.e Vec<B>
-    type C; //swapped higher type, i.e C = Vec<A>
+pub trait Higher<Output> {
+    type Current; //current type inside higher type, i.e Vec<Current>
+    type FOutput; //swapped higher type, i.e C = Vec<Output>
 }
 
 /// macro to lift types
 #[macro_export]
 macro_rules! lift {
     ($t:ident) => {
-        impl<A,C> Higher<A> for $t<C> {
-            type B = C;
-            type C = $t<A>;
+        impl<Output,T> Higher<Output> for $t<T> {
+            type Current = T;
+            type FOutput = $t<Output>;
         }
     }
 }
@@ -23,9 +23,9 @@ macro_rules! lift {
 #[macro_export]
 macro_rules! lift2left {
     ($t:ident) => {
-        impl<A, T, E> Higher<A> for $t<T, E> {
-            type B = T;
-            type C = $t<A, E>;
+        impl<Output, T, E> Higher<Output> for $t<T, E> {
+            type Current = T;
+            type FOutput = $t<Output, E>;
         }
     }
 }
@@ -33,9 +33,9 @@ macro_rules! lift2left {
 #[macro_export]
 macro_rules! lift2right {
     ($t:ident) => {
-        impl<A, L, R> Higher<A> for $t<L, R> {
-            type B = T;
-            type C = $t<L, A>;
+        impl<Output, L, R> Higher<Output> for $t<L, R> {
+            type Current = R;
+            type FOutput = $t<L, Output>;
         }
     }
 }
@@ -58,7 +58,7 @@ lift2left!(Result);
 ///add: &self -> &A -> A
 pub trait SemiGroup {
     type A;
-    fn add(&self, b: &Self::A) -> Self::A;
+    fn add(&self, Current: &Self::A) -> Self::A;
 }
 
 ///`Monoid` trait
@@ -78,29 +78,29 @@ pub trait Foldable  {
 }
 
 /// `Functor` trait, similar to Haskell's functor class
-/// requires a function fmap of type: &self -> Fn(`&Self::B`) -> A
+/// requires a function fmap of type: &self -> Fn(`&Self::Current`) -> A
 /// e.g `Some(2).fmap(|x| x*x) = Some(4)`
 /// `None.fmap(|x| x*x) = None`
 pub trait Functor<A>: Higher<A> {
-    fn fmap<F>(&self, f: F) -> Self::C where F: Fn(&Self::B) -> A;
+    fn fmap<F>(&self, f: F) -> Self::FOutput where F: Fn(&Self::Current) -> A;
 }
 
 ///`Applicative` trait, similar to Haskell's applicative class
 ///requires two functions:
-///raise (normally pure): lifts a B to an A<B> i.e `Option::lift(2) = Some(2)`
+///raise (normally pure): lifts a Current to an A<Current> i.e `Option::lift(2) = Some(2)`
 ///apply (<*> in haskell): applies an applicative functor i.e `Some(2).apply(Some(f)) = Some(f(2))`
 pub trait Applicative<A> : Higher<A> {
-    fn raise(x: A) -> Self::C where Self: Higher<A, B=A>;
-    fn apply<F>(&self, <Self as Higher<F>>::C) -> <Self as Higher<A>>::C where F: Fn(&<Self as Higher<A>>::B) -> A, Self: Higher<F>; //kinda ugly
+    fn raise(x: A) -> Self::FOutput where Self: Higher<A, Current=A>;
+    fn apply<F>(&self, f: <Self as Higher<F>>::FOutput) -> <Self as Higher<A>>::FOutput where F: Fn(&<Self as Higher<A>>::Current) -> A, Self: Higher<F>; //kinda ugly
 }
 
 /// `Monad trait`, similar to Haskell's monad class
 /// requires two functions:
-/// lift (usually return but return is reserved): lifts an B to an A<B>, i.e `Option::lift(2) = Some(2)`
-/// bind: maps an A<B> to an A<C> i.e `Some(2).bind(|x| Some(x+1)) = Some(3)`
+/// lift (usually return but return is reserved): lifts an Current to an A<Current>, i.e `Option::lift(2) = Some(2)`
+/// bind: maps an A<Current> to an A<C> i.e `Some(2).bind(|x| Some(x+1)) = Some(3)`
 pub trait Monad<A>: Higher<A> {
-    fn lift(x: A) -> Self::C where Self: Higher<A, B = A>;
-    fn bind<F>(&self, F) -> Self::C where F: FnMut(&Self::B) -> Self::C;
+    fn lift(x: A) -> Self::FOutput where Self: Higher<A, Current = A>;
+    fn bind<F>(&self, F) -> Self::FOutput where F: FnMut(&Self::Current) -> Self::FOutput;
 }
 
 //macros
@@ -109,8 +109,8 @@ pub trait Monad<A>: Higher<A> {
 #[macro_export]
 macro_rules! functorize {
     ($t:ident) => {
-        impl<A,B> Functor<A> for $t<B> {
-            fn fmap<F>(&self, f:F) -> $t<A> where F: Fn(&B) -> A {
+        impl<A,Current> Functor<A> for $t<Current> {
+            fn fmap<F>(&self, f:F) -> $t<A> where F: Fn(&Current) -> A {
                 self.iter().map(f).collect::<$t<A>>()
             }
         }
@@ -175,8 +175,8 @@ macro_rules! semigroup_num {
     ($t:ident) => {
         impl SemiGroup for $t {
             type A = $t;
-            fn add(&self, b: &Self::A) -> Self::A {
-                self + b
+            fn add(&self, Current: &Self::A) -> Self::A {
+                self + Current
             }
         }
     }
@@ -188,10 +188,10 @@ macro_rules! semigroup {
     ($t:ident) => {
         impl<T: Clone> SemiGroup for $t<T> {
             type A = $t<T>;
-            fn add(&self, b: &Self::A) -> Self::A {
+            fn add(&self, Current: &Self::A) -> Self::A {
                 let mut ret = $t::new();
                 ret.extend(self.iter().cloned());
-                ret.extend(b.iter().cloned());
+                ret.extend(Current.iter().cloned());
                 ret
             }
         }
@@ -204,10 +204,10 @@ macro_rules! semigroup_ord {
     ($t:ident) => {
         impl<T: Clone + Ord> SemiGroup for $t<T> {
             type A = $t<T>;
-            fn add(&self, b: &Self::A) -> Self::A {
+            fn add(&self, Current: &Self::A) -> Self::A {
                 let mut ret = $t::new();
                 ret.extend(self.iter().cloned());
-                ret.extend(b.iter().cloned());
+                ret.extend(Current.iter().cloned());
                 ret
             }
         }

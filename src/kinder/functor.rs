@@ -76,7 +76,7 @@ functorize!(VecDeque);
 // Tests of each HKT functor
 #[cfg(test)]
 mod test {
-    use lift::Functor;
+    use kinder::lift::Functor;
 
     #[test]
     fn test_option() {

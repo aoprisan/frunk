@@ -60,7 +60,7 @@ semigroup_ord!(BTreeSet);
 
 #[cfg(test)]
 mod test {
-    use lift::{SemiGroup};
+    use kinder::lift::{SemiGroup};
     
     #[test]
     fn test_vec() {

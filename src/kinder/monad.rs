@@ -6,7 +6,7 @@ use std::collections::{BTreeSet, HashSet, BinaryHeap};
 
 // Implementation of Monad for Vec
 impl<A, B> Monad<A> for Vec<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         vec![x]
     }
 
@@ -19,7 +19,7 @@ impl<A, B> Monad<A> for Vec<B> {
 
 // Implementation of Monad for Option
 impl<A, B> Monad<A> for Option<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         Some(x)
     }
 
@@ -35,7 +35,7 @@ impl<A, B> Monad<A> for Option<B> {
 
 // Implementation of Monad for Result
 impl<A, T, E : Clone> Monad<A> for Result<T, E> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         Ok(x)
     }
 
@@ -51,7 +51,7 @@ impl<A, T, E : Clone> Monad<A> for Result<T, E> {
 
 //implementation of Moand for Box
 impl<A,B> Monad<A> for Box<B> {
-    fn lift(x:A) -> <Self as Higher<A>>::C {
+    fn lift(x:A) -> <Self as Higher<A>>::FOutput {
         Box::new(x)
     }
 
@@ -64,7 +64,7 @@ impl<A,B> Monad<A> for Box<B> {
 
 // Implementation of Monad for LinkedList
 impl<A, B> Monad<A> for LinkedList<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         let mut ret = LinkedList::new();
         ret.push_back(x);
         ret
@@ -79,7 +79,7 @@ impl<A, B> Monad<A> for LinkedList<B> {
 
 //Implementation of Monad for VecDeque
 impl<A: Clone, B: Clone> Monad<A> for VecDeque<B> {
-    fn lift(x:A) -> <Self as Higher<A>>::C {
+    fn lift(x:A) -> <Self as Higher<A>>::FOutput {
         let mut ret = VecDeque::new();
         ret.push_back(x);
         ret
@@ -88,18 +88,18 @@ impl<A: Clone, B: Clone> Monad<A> for VecDeque<B> {
     fn bind<F>(&self, mut f: F) -> VecDeque<A>
         where F: FnMut(&B) -> VecDeque<A>
     {
-       let mut ret = VecDeque::new();
-       let mapped = self.iter().map(f).collect::<VecDeque<VecDeque<A>>>();
-       for i in mapped {
+        let mut ret = VecDeque::new();
+        let mapped = self.iter().map(f).collect::<VecDeque<VecDeque<A>>>();
+        for i in mapped {
             ret.extend(i.iter().cloned());
-       }
-       ret
+        }
+        ret
     }
 }
 
 // Implementations of Monad for BTreeSet
 impl<A: Ord, B: Ord> Monad<A> for BTreeSet<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         let mut ret = BTreeSet::new();
         ret.insert(x);
         ret
@@ -113,7 +113,7 @@ impl<A: Ord, B: Ord> Monad<A> for BTreeSet<B> {
 }
 
 impl<A: Ord, B:Ord> Monad<A> for BinaryHeap<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         let mut ret = BinaryHeap::new();
         ret.push(x);
         ret
@@ -128,7 +128,7 @@ impl<A: Ord, B:Ord> Monad<A> for BinaryHeap<B> {
 
 // Implementations of Monad for HashSet
 impl<A: Eq + Hash, B: Eq + Hash> Monad<A> for HashSet<B> {
-    fn lift(x: A) -> <Self as Higher<A>>::C {
+    fn lift(x: A) -> <Self as Higher<A>>::FOutput {
         let mut ret = HashSet::new();
         ret.insert(x);
         ret
@@ -143,7 +143,7 @@ impl<A: Eq + Hash, B: Eq + Hash> Monad<A> for HashSet<B> {
 
 #[cfg(test)]
 mod test {
-    use lift::{Higher, Monad};
+    use kinder::lift::{Higher, Monad};
 
     #[test]
     fn test_option() {
@@ -169,4 +169,11 @@ mod test {
         assert_eq!(Box::new(2).bind(|x| Box::new(x+1)), Box::new(3));
     }
 
+    #[test]
+    pub fn test_monad() {
+        let none: Option<u32> = None;
+        assert_eq!(Some(10 as u32).bind(|x| Some(x + 1)), Some(11));
+        assert_eq!(None.bind(|x| Some(x + 1)), None);
+        assert_eq!(Some(10).bind(|x| none), None);
+    }
 }
