@@ -2,6 +2,7 @@
 name = "frunk_core"
 version = "0.0.18"
 authors = ["Lloyd <lloydmeta@gmail.com>"]
+edition = "2021"
 description = "Frunk core provides developers with HList and Generic"
 license = "MIT"
 documentation = "https://docs.rs/frunk_core"

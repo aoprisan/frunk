@@ -1,4 +1,4 @@
-use kinder::lift::{Higher, Functor};
+use crate::kinder::lift::{Higher, Functor};
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;
@@ -76,7 +76,7 @@ functorize!(VecDeque);
 // Tests of each HKT functor
 #[cfg(test)]
 mod test {
-    use kinder::lift::Functor;
+    use crate::kinder::lift::Functor;
 
     #[test]
     fn test_option() {

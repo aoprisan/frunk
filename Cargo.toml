@@ -2,6 +2,7 @@
 name = "frunk"
 version = "0.1.31"
 authors = ["Lloyd <lloydmeta@gmail.com>"]
+edition = "2021"
 description = "Frunk provides developers with a number of functional programming tools like HList, Coproduct, Generic, LabelledGeneric, Validated, Monoid, Semigroup and friends."
 license = "MIT"
 documentation = "https://docs.rs/frunk"

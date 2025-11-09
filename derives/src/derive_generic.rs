@@ -1,34 +1,38 @@
-use quote::Tokens;
-use common::{build_hcons_constr, to_ast};
-use syn::{Ident, Body, VariantData, Field, Ty};
+use crate::common::{build_hcons_constr, to_ast};
+use syn::{Ident, Data, Fields, Field, Type};
 use proc_macro::TokenStream;
+use proc_macro2::{TokenStream as TokenStream2, Span};
+use quote::quote;
 
 /// Given an AST, returns an implementation of Generic using HList
 ///
 /// Only works with Structs and Tuple Structs
-pub fn impl_generic(input: TokenStream) -> Tokens {
-    let ast = to_ast(&input);
+pub fn impl_generic(input: TokenStream) -> TokenStream2 {
+    let ast = to_ast(input);
     let name = &ast.ident;
     let generics = &ast.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-    let fields: &Vec<Field> = match ast.body {
-        Body::Struct(VariantData::Struct(ref fields)) => fields,
-        Body::Struct(VariantData::Tuple(ref fields)) => fields,
+    let fields: Vec<&Field> = match &ast.data {
+        Data::Struct(data_struct) => match &data_struct.fields {
+            Fields::Named(fields_named) => fields_named.named.iter().collect(),
+            Fields::Unnamed(fields_unnamed) => fields_unnamed.unnamed.iter().collect(),
+            Fields::Unit => vec![],
+        },
         _ => panic!("Only structs are supported")
     };
-    let field_types: Vec<Ty> = fields.iter()
-        .map(|f| f.ty.clone()).collect();
+    let field_types: Vec<&Type> = fields.iter()
+        .map(|f| &f.ty).collect();
     let repr_type = build_repr(&field_types);
-    let maybe_fnames: Vec<Option<Ident>> = fields
+    let maybe_fnames: Vec<Option<&Ident>> = fields
         .iter()
-        .map(|f| f.ident.clone())
+        .map(|f| f.ident.as_ref())
         .collect();
     let is_tuple_struct = maybe_fnames.iter().all(|m_f| m_f.is_none());
 
     let fnames: Vec<Ident> = fields
         .iter()
         .enumerate()
-        .map(|(i, f)| f.ident.clone().unwrap_or(Ident::new(format!("_{}", i))))
+        .map(|(i, f)| f.ident.clone().unwrap_or_else(|| Ident::new(&format!("_{}", i), Span::call_site())))
         .collect();
     let hcons_constr = build_hcons_constr(&fnames);
     let hcons_pat = build_hcons_constr(&fnames);
@@ -59,15 +63,15 @@ pub fn impl_generic(input: TokenStream) -> Tokens {
     }
 }
 
-fn build_repr(field_types: &Vec<Ty>) -> Tokens {
+fn build_repr(field_types: &Vec<&Type>) -> TokenStream2 {
     match field_types.len() {
         0 => quote! { ::frunk_core::hlist::HNil },
         1 => {
-            let h = field_types[0].clone();
+            let h = field_types[0];
             quote! { ::frunk_core::hlist::HCons<#h, ::frunk_core::hlist::HNil> }
         },
         _ => {
-            let h = field_types[0].clone();
+            let h = field_types[0];
             let tail = field_types[1..].to_vec();
             let tail_type = build_repr(&tail);
             quote! { ::frunk_core::hlist::HCons<#h, #tail_type> }
@@ -76,13 +80,10 @@ fn build_repr(field_types: &Vec<Ty>) -> Tokens {
 }
 
 
-fn build_new_struct_constr(struct_name: &Ident, bindnames: &Vec<Ident>, is_tuple_struct: bool) -> Tokens {
+fn build_new_struct_constr(struct_name: &Ident, bindnames: &Vec<Ident>, is_tuple_struct: bool) -> TokenStream2 {
     if is_tuple_struct {
-        let cloned_bind = bindnames.clone();
-        quote! { #struct_name (#(#cloned_bind),* ) }
+        quote! { #struct_name (#(#bindnames),* ) }
     } else {
-        let cloned_bind1 = bindnames.clone();
-        let cloned_bind2 = bindnames.clone();
-        quote! { #struct_name { #(#cloned_bind1: #cloned_bind2),* } }
+        quote! { #struct_name { #(#bindnames: #bindnames),* } }
     }
 }

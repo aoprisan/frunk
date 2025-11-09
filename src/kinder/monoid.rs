@@ -1,4 +1,4 @@
-use kinder::lift::{SemiGroup, Monoid};
+use crate::kinder::lift::{SemiGroup, Monoid};
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;

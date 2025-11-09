@@ -2,6 +2,7 @@
 name = "frunk_laws"
 version = "0.0.9"
 authors = ["Lloyd <lloydmeta@gmail.com>"]
+edition = "2021"
 description = "frunk_laws contains laws for algebras declared in Frunk."
 license = "MIT"
 documentation = "https://docs.rs/frunk_laws"
@@ -16,4 +17,4 @@ path = ".."
 version = "0.1.31"
 
 [dependencies]
-quickcheck = "0.4.1"
+quickcheck = "1.0"

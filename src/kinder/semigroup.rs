@@ -1,4 +1,4 @@
-use kinder::lift::SemiGroup;
+use crate::kinder::lift::SemiGroup;
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;
@@ -60,7 +60,7 @@ semigroup_ord!(BTreeSet);
 
 #[cfg(test)]
 mod test {
-    use kinder::lift::{SemiGroup};
+    use crate::kinder::lift::{SemiGroup};
     
     #[test]
     fn test_vec() {

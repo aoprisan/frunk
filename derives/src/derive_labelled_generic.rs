@@ -1,28 +1,32 @@
-use quote::Tokens;
-use common::{build_hcons_constr, to_ast};
-use syn::{Ident, Body, VariantData, Field};
+use crate::common::{build_hcons_constr, to_ast};
+use syn::{Ident, Data, Fields, Field};
 use proc_macro::TokenStream;
+use proc_macro2::{TokenStream as TokenStream2, Span};
+use quote::quote;
 
 /// These are assumed to exist as enums in frunk_core::labelled
-const ALPHA_CHARS: &'static [char] = &['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const ALPHA_CHARS: &[char] = &['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 /// These are assumed to exist as enums in frunk_core::labelled as underscore prepended enums
-const UNDERSCORE_CHARS: &'static [char] = &['_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const UNDERSCORE_CHARS: &[char] = &['_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 /// Given an AST, returns an implementation of Generic using HList with
 /// Field (see frunk_core::labelled) elements
 ///
 /// Only works with Structs and Tuple Structs
-pub fn impl_labelled_generic(input: TokenStream) -> Tokens {
-    let ast = to_ast(&input);
+pub fn impl_labelled_generic(input: TokenStream) -> TokenStream2 {
+    let ast = to_ast(input);
     let name = &ast.ident;
     let generics = &ast.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-    let fields: &Vec<Field> = match ast.body {
-        Body::Struct(VariantData::Struct(ref fields)) => fields,
+    let fields: Vec<&Field> = match &ast.data {
+        Data::Struct(data_struct) => match &data_struct.fields {
+            Fields::Named(fields_named) => fields_named.named.iter().collect(),
+            _ => panic!("Only Structs are supported. Tuple structs cannot be turned into Labelled Generics.")
+        },
         _ => panic!("Only Structs are supported. Tuple structs cannot be turned into Labelled Generics.")
     };
-    let repr_type = build_labelled_repr(fields);
+    let repr_type = build_labelled_repr(&fields);
 
     let fnames: Vec<Ident> = fields
         .iter()
@@ -55,17 +59,17 @@ pub fn impl_labelled_generic(input: TokenStream) -> Tokens {
 }
 
 /// Builds the labelled HList representation for a vector of fields
-fn build_labelled_repr(fields: &Vec<Field>) -> Tokens {
+fn build_labelled_repr(fields: &Vec<&Field>) -> TokenStream2 {
     match fields.len() {
         0 => quote! { ::frunk_core::hlist::HNil },
         1 => {
-            let field = fields[0].clone();
-            let labelled_type = build_labelled_type_for(&field);
+            let field = fields[0];
+            let labelled_type = build_labelled_type_for(field);
             quote! { ::frunk_core::hlist::HCons<#labelled_type, ::frunk_core::hlist::HNil> }
         },
         _ => {
-            let field = fields[0].clone();
-            let labelled_type = build_labelled_type_for(&field);
+            let field = fields[0];
+            let labelled_type = build_labelled_type_for(field);
             let tail = fields[1..].to_vec();
             let tail_type = build_labelled_repr(&tail);
             quote! { ::frunk_core::hlist::HCons<#labelled_type, #tail_type> }
@@ -75,10 +79,10 @@ fn build_labelled_repr(fields: &Vec<Field>) -> Tokens {
 
 /// Given a field, returns an AST for its Field (see labelled module in core) type,
 /// which holds its name (or an approximation) and type.
-fn build_labelled_type_for(field: &Field) -> Tokens {
-    let ident = field.clone().ident.unwrap(); // this method is for labelled structs only
-    let name_as_type = build_type_level_name_for(&ident);
-    let ref field_type = field.ty;
+fn build_labelled_type_for(field: &Field) -> TokenStream2 {
+    let ident = field.ident.as_ref().unwrap(); // this method is for labelled structs only
+    let name_as_type = build_type_level_name_for(ident);
+    let field_type = &field.ty;
     quote! { ::frunk_core::labelled::Field<#name_as_type, #field_type> }
 }
 
@@ -86,10 +90,10 @@ fn build_labelled_type_for(field: &Field) -> Tokens {
 /// enums generated in frunk_core::labelled.
 ///
 /// For example, given first_name, returns an AST for Hlist!(f,i,r,s,t,__,n,a,m,e)
-fn build_type_level_name_for(ident: &Ident) -> Tokens {
-    let name = ident.as_ref();
+fn build_type_level_name_for(ident: &Ident) -> TokenStream2 {
+    let name = ident.to_string();
     let name_as_idents: Vec<Ident> = name.chars().flat_map(|c| encode_as_ident(&c)).collect();
-    let name_as_tokens: Vec<Tokens> = name_as_idents.iter().map(|ident| {
+    let name_as_tokens: Vec<TokenStream2> = name_as_idents.iter().map(|ident| {
         quote! { ::frunk_core::labelled::#ident }
     }).collect();
     quote! { (#(#name_as_tokens),*) }
@@ -104,9 +108,9 @@ fn build_type_level_name_for(ident: &Ident) -> Tokens {
 /// This method assumes that _uc and uc_ are in frunk_core::labelled as enums
 fn encode_as_ident(c: &char) -> Vec<Ident> {
     if ALPHA_CHARS.contains(c) {
-        vec![Ident::new(c.to_string())]
+        vec![Ident::new(&c.to_string(), Span::call_site())]
     } else if UNDERSCORE_CHARS.contains(c) {
-        vec![Ident::new(format!("_{}", c))]
+        vec![Ident::new(&format!("_{}", c), Span::call_site())]
     } else {
         // UTF escape and get the hexcode
         let as_unicode = c.escape_unicode();
@@ -116,9 +120,9 @@ fn encode_as_ident(c: &char) -> Vec<Ident> {
         let delimited_hex = as_unicode.filter(|c| c.is_alphanumeric());
         let mut hex_idents: Vec<Ident> = delimited_hex.flat_map(|c| encode_as_ident(&c)).collect();
         // sandwich between _uc and uc_
-        let mut book_ended: Vec<Ident> = vec![Ident::new("_uc")];
+        let mut book_ended: Vec<Ident> = vec![Ident::new("_uc", Span::call_site())];
         book_ended.append(&mut hex_idents);
-        book_ended.push(Ident::new("uc_"));
+        book_ended.push(Ident::new("uc_", Span::call_site()));
         book_ended
     }
 }
@@ -129,17 +133,17 @@ fn encode_as_ident(c: &char) -> Vec<Ident> {
 ///
 /// Assumes that there are bindings in the immediate environment with those names that
 /// are bound to properly-typed values.
-fn build_labelled_hcons_constr(fields: &Vec<Field>) -> Tokens {
+fn build_labelled_hcons_constr(fields: &Vec<&Field>) -> TokenStream2 {
     match fields.len() {
         0 => quote! { ::frunk_core::hlist::HNil },
         1 => {
-            let field = fields[0].clone();
-            let labelled_constructor = build_field_constr_for(&field);
+            let field = fields[0];
+            let labelled_constructor = build_field_constr_for(field);
             quote! { ::frunk_core::hlist::HCons{ head: #labelled_constructor, tail: ::frunk_core::hlist::HNil } }
         },
         _ => {
-            let field = fields[0].clone();
-            let labelled_constructor = build_field_constr_for(&field);
+            let field = fields[0];
+            let labelled_constructor = build_field_constr_for(field);
             let tail = fields[1..].to_vec();
             let hlist_tail = build_labelled_hcons_constr(&tail);
             quote! { ::frunk_core::hlist::HCons{ head: #labelled_constructor, tail: #hlist_tail }}
@@ -154,11 +158,12 @@ fn build_labelled_hcons_constr(fields: &Vec<Field>) -> Tokens {
 /// field name.
 ///
 /// For example, given a field "age" of type i32, returns: field_with_name::<(a,g,e), i32>(age, "age")
-fn build_field_constr_for(field: &Field) -> Tokens {
-    let name_as_type = build_type_level_name_for(&field.clone().ident.unwrap());
-    let field_type = field.ty.clone();
-    let field_name = field.ident.clone();
-    let field_name_str = field.ident.clone().unwrap().as_ref().to_string();
+fn build_field_constr_for(field: &Field) -> TokenStream2 {
+    let ident = field.ident.as_ref().unwrap();
+    let name_as_type = build_type_level_name_for(ident);
+    let field_type = &field.ty;
+    let field_name = &field.ident;
+    let field_name_str = ident.to_string();
     quote! { ::frunk_core::labelled::field_with_name::<#name_as_type, #field_type>(#field_name_str, #field_name) }
 }
 
@@ -169,8 +174,6 @@ fn build_field_constr_for(field: &Field) -> Tokens {
 /// are bound to Field values.
 ///
 /// The opposite of build_labelled_hcons_constr
-fn build_new_labelled_struct_constr(struct_name: &Ident, bindnames: &Vec<Ident>) -> Tokens {
-    let cloned_bind1 = bindnames.clone();
-    let cloned_bind2 = bindnames.clone();
-    quote! { #struct_name { #(#cloned_bind1: #cloned_bind2.value),* } }
+fn build_new_labelled_struct_constr(struct_name: &Ident, bindnames: &Vec<Ident>) -> TokenStream2 {
+    quote! { #struct_name { #(#bindnames: #bindnames.value),* } }
 }

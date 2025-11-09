@@ -1,4 +1,4 @@
-use kinder::lift::*;
+use crate::kinder::lift::*;
 
 pub enum Xor<L, R> {
     Left(L),

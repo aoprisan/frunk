@@ -1,4 +1,4 @@
-use kinder::lift::{Higher, Monad};
+use crate::kinder::lift::{Higher, Monad};
 use std::hash::Hash;
 use std::collections::linked_list::LinkedList;
 use std::collections::vec_deque::VecDeque;
@@ -143,7 +143,7 @@ impl<A: Eq + Hash, B: Eq + Hash> Monad<A> for HashSet<B> {
 
 #[cfg(test)]
 mod test {
-    use kinder::lift::{Higher, Monad};
+    use crate::kinder::lift::{Higher, Monad};
 
     #[test]
     fn test_option() {

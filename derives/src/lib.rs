@@ -7,12 +7,6 @@
 //!   1. [Source on Github](https://github.com/lloydmeta/frunk)
 //!   2. [Crates.io page](https://crates.io/crates/frunk)
 
-extern crate proc_macro;
-extern crate frunk_core;
-#[macro_use]
-extern crate quote;
-extern crate syn;
-
 use proc_macro::TokenStream;
 
 mod common;
@@ -31,7 +25,7 @@ pub fn generic(input: TokenStream) -> TokenStream {
     let gen = impl_generic(input);
     //    println!("{}", gen);
     // Return the generated impl
-    gen.parse().unwrap()
+    gen.into()
 }
 
 /// Derives a Generic instance based on Field + HList for
@@ -47,5 +41,5 @@ pub fn labelled_generic(input: TokenStream) -> TokenStream {
     let gen = impl_labelled_generic(input);
     //    println!("{}", gen);
     // Return the generated impl
-    gen.parse().unwrap()
+    gen.into()
 }

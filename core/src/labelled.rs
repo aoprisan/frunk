@@ -64,7 +64,7 @@
 //! ```
 
 use std::marker::PhantomData;
-use hlist::*;
+use crate::hlist::*;
 use std::fmt;
 
 /// A trait that converts from a type to a labelled generic representation
